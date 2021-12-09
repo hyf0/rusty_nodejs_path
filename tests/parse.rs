@@ -103,7 +103,7 @@ fn posix_tests() {
 
     check_parse_format_for_posix(&unix_paths);
 
-    let unixSpecialCaseFormatTests = [
+    let unix_special_case_format_tests = [
         (
             Parsed {
                 dir: "some/dir".to_owned(),
@@ -159,7 +159,7 @@ fn posix_tests() {
         ),
     ];
 
-    check_format_for_posix(&unixSpecialCaseFormatTests);
+    check_format_for_posix(&unix_special_case_format_tests);
 
     // let errors = [
     //   { method: "parse", input: [null] },

@@ -24,56 +24,175 @@ impl Default for Parsed {
 fn normalize_string(
     path: &str,
     allow_above_root: bool,
-    separator: &str,
-    is_path_separator: &dyn Fn(char) -> bool,
+    separator: &char,
+    is_path_separator: &dyn Fn(&char) -> bool,
 ) -> String {
-    let res = String::new();
-    let last_segment_length = 0;
-    let last_slash = -1;
+    let path = path.chars().collect::<Vec<char>>();
+
+    let mut res: Vec<char> = Vec::new();
+    let mut last_segment_length = 0;
+    let mut last_slash = -1;
+    let mut dots = 0;
     let mut code = ' ';
-    let dots = 0;
 
     {
-        let path = path.chars().collect::<Vec<char>>();
         let mut i = 0;
         let path_len = path.len();
 
         while i <= path_len {
             if i < path_len {
                 code = *path.get(i).unwrap();
-            } else if is_path_separator(code) {
-                i += 1;
+            } else if is_path_separator(&code) {
                 break;
             } else {
-                code = (47 as char)
+                code = CHAR_FORWARD_SLASH
             }
+
+            if is_path_separator(&code) {
+                if last_slash == i as i32 - 1 || dots == 1 {
+                    // noop
+                } else if dots == 2 {
+                    if res.len() < 2
+                        || last_segment_length != 2
+                        || res.get(res.len() - 1).unwrap() != &CHAR_DOT
+                        || res.get(res.len() - 2).unwrap() != &CHAR_DOT
+                    {
+                        if res.len() > 2 {
+                            let last_slash_index =
+                                last_index_of(&res, separator).map_or(-1, |s| s as i32);
+                            if last_slash_index == -1 {
+                                res = vec![];
+                                last_segment_length = 0
+                            } else {
+                                res = res[0..last_slash_index as usize].to_vec();
+                                last_segment_length = res.len() as i32
+                                    - 1
+                                    - last_index_of(&res, separator).map_or(-1, |s| s as i32);
+                            }
+                            last_slash = i as i32;
+                            dots = 0;
+
+                            i += 1;
+                            continue;
+                        } else if res.len() != 0 {
+                            res = vec![];
+                            last_segment_length = 0;
+                            last_slash = i as i32;
+                            dots = 0;
+
+                            i += 1;
+                            continue;
+                        }
+                    }
+                    if allow_above_root {
+                        if res.len() > 0 {
+                            res.push(*separator);
+                        }
+                        res.push('.');
+                        res.push('.');
+                        last_segment_length = 2;
+                    }
+                } else {
+                    if res.len() > 0 {
+                        res.push(*separator)
+                    }
+                    path[(last_slash + 1) as usize..i as usize]
+                        .iter()
+                        .for_each(|c| res.push(*c));
+                    last_segment_length = i as i32 - last_slash - 1;
+                }
+                last_slash = i as i32;
+                dots = 0;
+            } else if code == CHAR_DOT && dots != -1 {
+                dots += 1;
+            } else {
+                dots = -1;
+            }
+
+            i += 1;
         }
     }
-    path.chars()
-        .into_iter()
-        .enumerate()
-        .for_each(|(i, code)| if !is_path_separator(code) {});
 
-    res
+    res.into_iter().collect()
 }
 
-pub mod win32 {}
+fn last_index_of(vec: &Vec<char>, tar: &char) -> Option<usize> {
+    vec.iter()
+        .enumerate()
+        .rev()
+        .find_map(|(idx, c)| if c == tar { Some(idx) } else { None })
+}
+
+pub mod win32 {
+    /// Provides the platform-specific path segment separator:
+    /// - `\` on Windows
+    /// - `/` on POSIX
+    #[allow(non_upper_case_globals)]
+    pub const sep: char = '\\';
+    /// Provides the platform-specific path delimiter:
+    /// - `;` for Windows
+    /// - `:` for POSIX
+    #[allow(non_upper_case_globals)]
+    pub const delimiter: char = ';';
+}
 
 pub mod posix {
-    use super::{format_inner, CHAR_DOT, CHAR_FORWARD_SLASH};
+    use super::{
+        format_inner, is_posix_path_separator, normalize_string, CHAR_DOT, CHAR_FORWARD_SLASH,
+    };
     use crate::Parsed;
 
-    pub const sep: &'static str = "/";
-    pub const delimiter: &'static str = ":";
+    /// Provides the platform-specific path segment separator:
+    /// - `\` on Windows
+    /// - `/` on POSIX
+    #[allow(non_upper_case_globals)]
+    pub const sep: char = '/';
+    /// Provides the platform-specific path delimiter:
+    /// - `;` for Windows
+    /// - `:` for POSIX
+    #[allow(non_upper_case_globals)]
+    pub const delimiter: char = ':';
 
+    ///
+    /// ```rust
+    /// assert_eq!(nodejs_path::basename("/foo/bar/baz/asdf/quux.html"), "quux.html".to_string());
+    /// ```
     pub fn basename(path: &str) -> String {
         parse(path).base
     }
 
+    /// ```rust
+    /// assert_eq!(nodejs_path::basename_without_ext("/foo/bar/baz/asdf/quux.html", ".html"), "quux".to_string());
+    ///
+    /// assert_eq!(nodejs_path::basename_without_ext("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML".to_string());
+    /// ```
+    pub fn basename_without_ext(path: &str, ext: &str) -> String {
+        let mut base = parse(path).base;
+        if base.ends_with(ext) {
+            for _i in 0..ext.chars().collect::<Vec<char>>().len() {
+                base.pop();
+            }
+        }
+        base
+    }
+    /// ```rust
+    /// assert_eq!(nodejs_path::dirname("/foo/bar/baz/asdf/quux"), "/foo/bar/baz/asdf".to_string());
+    /// ```
     pub fn dirname(path: &str) -> String {
         parse(path).dir
     }
 
+    /// ```rust
+    /// assert_eq!(nodejs_path::extname("index.html"), ".html".to_string());
+    ///
+    /// assert_eq!(nodejs_path::extname("index.coffee.md"), ".md".to_string());
+    ///
+    /// assert_eq!(nodejs_path::extname("index."), ".".to_string());
+    ///
+    /// assert_eq!(nodejs_path::extname("index"), "".to_string());
+    ///
+    /// assert_eq!(nodejs_path::extname(".index.md"), ".md".to_string());
+    /// ```
     pub fn extname(path: &str) -> String {
         parse(path).ext
     }
@@ -91,15 +210,39 @@ pub mod posix {
     }
 
     pub fn join() {
-      todo!()
+        todo!()
     }
 
-    pub fn normalize() {
-      todo!()
+    pub fn normalize(path: &str) -> String {
+        if path.len() == 0 {
+            return ".".to_string();
+        }
+        todo!()
     }
 
-    pub fn parse(raw_path: &str) -> Parsed {
-        let path = raw_path.chars().collect::<Vec<char>>();
+    /// # Example
+    /// ```rust
+    /// let left = nodejs_path::parse("/home/user/dir/file.txt");
+    /// assert_eq!(left, nodejs_path::Parsed{
+    ///   root: "/".to_string(),
+    ///   dir: "/home/user/dir".to_string(),
+    ///   base: "file.txt".to_string(),
+    ///   ext: ".txt".to_string(),
+    ///   name: "file".to_string(),
+    /// })
+    /// ```
+    ///
+    /// ```plain
+    /// ┌─────────────────────┬────────────┐
+    /// │          dir        │    base    │
+    /// ├──────┬              ├──────┬─────┤
+    /// │ root │              │ name │ ext │
+    /// "  /    home/user/dir / file  .txt "
+    /// └──────┴──────────────┴──────┴─────┘
+    /// (All spaces in the "" line should be ignored. They are purely for formatting.)
+    /// ```
+    pub fn parse(path: &str) -> Parsed {
+        let path = path.chars().collect::<Vec<char>>();
         let mut ret = Parsed::default();
         if path.len() == 0 {
             ret
@@ -197,12 +340,112 @@ pub mod posix {
     }
 
     pub fn relative() {
-      todo!()
+        todo!()
     }
 
-    pub fn resolve() {
-      todo!()
+    fn posix_cwd() -> String {
+        let cwd = std::env::current_dir()
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .to_owned();
+
+        if cfg!(target_os = "windows") {
+            // Converts Windows' backslash path separators to POSIX forward slashes
+            // and truncates any drive indicator
+            // const regexp = /\\/g;
+            // return () => {
+            //   const cwd = StringPrototypeReplace(process.cwd(), regexp, '/');
+            //   return StringPrototypeSlice(cwd, StringPrototypeIndexOf(cwd, '/'));
+            // };
+            return cwd
+                .chars()
+                .map(|c| if c == '\\' { '/' } else { c })
+                .take_while(|c| c != &'/')
+                .collect();
+        }
+
+        // We're already on POSIX, no need for any transformations
+        return cwd;
     }
+
+    pub fn resolve_with_array(args: &[&str]) -> String {
+        let mut resolved_path = "".to_owned();
+        let mut resolved_absolute = false;
+
+        let mut i = args.len() as i32 - 1;
+
+        while i >= -1 && !resolved_absolute {
+            let path = if i >= 0 {
+                args.get(i.clone() as usize).unwrap().to_string()
+            } else {
+                posix_cwd()
+            };
+
+            // Skip empty entries
+            if path.len() == 0 {
+                i -= 1;
+                continue;
+            }
+
+            resolved_path = format!("{}/{}", path, resolved_path);
+            resolved_absolute = path
+                .chars()
+                .next()
+                .map(|c| c == CHAR_FORWARD_SLASH)
+                .unwrap_or(false);
+
+            i -= 1;
+        }
+
+        // At this point the path should be resolved to a full absolute path, but
+        // handle relative paths to be safe (might happen when process.cwd() fails)
+
+        // Normalize the path
+        resolved_path = normalize_string(
+            &resolved_path,
+            !resolved_absolute,
+            &sep,
+            &is_posix_path_separator,
+        );
+
+        if resolved_absolute {
+            "/".to_owned() + &resolved_path
+        } else {
+            if resolved_path.len() > 0 {
+                resolved_path
+            } else {
+                ".".to_owned()
+            }
+        }
+    }
+
+    /// #Example
+    ///
+    /// ```rust
+    /// assert_eq!(nodejs_path::resolve!("/foo/bar", "./baz"), "/foo/bar/baz".to_string());
+    ///
+    /// assert_eq!(nodejs_path::resolve!("/foo/bar", "/tmp/file/"), "/tmp/file".to_string());
+    ///
+    /// assert_eq!(nodejs_path::resolve!("/home/myself/node", "wwwroot", "static_files/png/", "../gif/image.gif"), "/home/myself/node/wwwroot/static_files/gif/image.gif".to_string());
+    ///
+    /// assert_eq!(nodejs_path::resolve!("."), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
+    ///
+    /// assert_eq!(nodejs_path::resolve!(), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
+    /// ```
+    #[macro_export]
+    macro_rules! resolve {
+      ( $( $x:expr ),* ) => {
+        {
+          $crate::posix::resolve_with_array(&[
+            $(
+              $x,
+            )*
+          ])
+        }
+      };
+    }
+    pub use resolve;
 
     pub fn to_namespaced_path() {}
 }
@@ -283,3 +526,8 @@ const CHAR_FORWARD_SLASH: char = '/'; /* / */
 // const CHAR_0: char = 48; /* 0 */
 // const CHAR_9: char = 57; /* 9 */
 // const EOL: isWindows ? '\r\n' : '\n'
+
+#[inline]
+fn is_posix_path_separator(code: &char) -> bool {
+    code == &CHAR_FORWARD_SLASH
+}
