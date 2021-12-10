@@ -10,4 +10,4 @@ pub use path::win32::*;
 pub use path::posix;
 pub use path::win32;
 
-pub use path::Parsed;
+pub use path::shared::Parsed;

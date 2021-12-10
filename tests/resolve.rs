@@ -34,7 +34,7 @@ fn posix_test() {
     ];
 
     tests.iter().for_each(|(input, right)| {
-        assert_eq!(posix::resolve_with_array(&input), *right);
+        assert_eq!(posix::resolve_impl(&input), *right);
     });
 
     assert_eq!(posix::resolve!("/var/lib", "../", "file/"), "/var/file");

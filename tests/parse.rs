@@ -4,23 +4,22 @@ use nodejs_path::{
 };
 
 fn check_parse_format_for_posix(paths: &[(&str, &str)]) {
-    use posix as path;
     paths.iter().for_each(|(element, root)| {
         let output = posix::parse(element);
         println!("{:#?} for {:?}", output, element);
-        assert_eq!(&path::format(output.clone()), element);
+        assert_eq!(&posix::format(output.clone()), element);
         assert_eq!(&output.root, root);
         assert!(output.dir.starts_with(&output.root));
         assert_eq!(
             output.dir,
             if output.dir.len() != 0 {
-                path::dirname(element)
+                posix::dirname(element)
             } else {
                 "".to_owned()
             }
         );
-        assert_eq!(output.base, path::basename(element));
-        assert_eq!(output.ext, path::extname(element));
+        assert_eq!(output.base, posix::basename!(element));
+        assert_eq!(output.ext, posix::extname(element));
     });
 }
 
