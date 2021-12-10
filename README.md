@@ -10,27 +10,27 @@ Port path module (and tests) of nodejs to rust.
   - [x] path.extname(path)
   - [x] path.format(pathObject)
   - [x] path.isAbsolute(path)
-  - [] path.join([...paths])
-  - [] path.normalize(path)
+  - [ ] path.join([...paths])
+  - [ ] path.normalize(path)
   - [x] path.parse(path)
-  - [] path.relative(from, to)
+  - [ ] path.relative(from, to)
   - [x] path.resolve([...paths])
   - [x] path.sep
-  - [] path.toNamespacedPath(path)
+  - [ ] path.toNamespacedPath(path)
 - win32
-  - [] path.basename(path[, ext])
-  - [] path.delimiter
-  - [] path.dirname(path)
-  - [] path.extname(path)
-  - [] path.format(pathObject)
-  - [] path.isAbsolute(path)
-  - [] path.join([...paths])
-  - [] path.normalize(path)
-  - [] path.parse(path)
-  - [] path.relative(from, to)
-  - [] path.resolve([...paths])
-  - [] path.sep
-  - [] path.toNamespacedPath(path)
+  - [ ] path.basename(path[, ext])
+  - [ ] path.delimiter
+  - [ ] path.dirname(path)
+  - [ ] path.extname(path)
+  - [ ] path.format(pathObject)
+  - [ ] path.isAbsolute(path)
+  - [ ] path.join([...paths])
+  - [ ] path.normalize(path)
+  - [ ] path.parse(path)
+  - [ ] path.relative(from, to)
+  - [ ] path.resolve([...paths])
+  - [ ] path.sep
+  - [ ] path.toNamespacedPath(path)
 
 # Related sources
 
