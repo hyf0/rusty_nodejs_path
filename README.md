@@ -1,6 +1,7 @@
 # rusty_nodejs_path
 Port path module (and tests) of nodejs to rust.
 
+- [crates.io](https://crates.io/crates/nodejs_path)
 - [Documents](https://docs.rs/nodejs_path/latest/nodejs_path/)
 
 # Progress
