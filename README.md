@@ -13,10 +13,10 @@ Port path module (and tests) of nodejs to rust using the same algorithms.
   - [x] [path.extname(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.extname.html)
   - [x] [path.format(pathObject)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.format.html)
   - [x] [path.isAbsolute(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.is_absolute.html)
-  - [x] path.join([...paths])
-  - [x] path.normalize(path)
+  - [x] [path.join([...paths])](https://docs.rs/nodejs_path/latest/nodejs_path/macro.join.html)
+  - [x] [path.normalize(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.normalize.html)
   - [x] [path.parse(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.parse.html)
-  - [x] path.relative(from, to)
+  - [x] [path.relative(from, to)](https://docs.rs/nodejs_path/latest/nodejs_path/fn.relative.html)
   - [x] [path.resolve([...paths])](https://docs.rs/nodejs_path/latest/nodejs_path/posix/macro.resolve.html)
   - [x] [path.sep](https://docs.rs/nodejs_path/latest/nodejs_path/posix/constant.sep.html)
   - [ ] ~~path.toNamespacedPath(path)~~
