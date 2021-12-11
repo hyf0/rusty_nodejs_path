@@ -1,5 +1,5 @@
 # rusty_nodejs_path
-Port path module (and tests) of nodejs to rust.
+Port path module (and tests) of nodejs to rust using the same algorithms.
 
 - [crates.io](https://crates.io/crates/nodejs_path)
 - [Documents](https://docs.rs/nodejs_path/latest/nodejs_path/)
@@ -13,13 +13,13 @@ Port path module (and tests) of nodejs to rust.
   - [x] [path.extname(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.extname.html)
   - [x] [path.format(pathObject)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.format.html)
   - [x] [path.isAbsolute(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.is_absolute.html)
-  - [ ] path.join([...paths])
-  - [ ] path.normalize(path)
+  - [x] path.join([...paths])
+  - [x] path.normalize(path)
   - [x] [path.parse(path)](https://docs.rs/nodejs_path/latest/nodejs_path/posix/fn.parse.html)
-  - [ ] path.relative(from, to)
+  - [x] path.relative(from, to)
   - [x] [path.resolve([...paths])](https://docs.rs/nodejs_path/latest/nodejs_path/posix/macro.resolve.html)
   - [x] [path.sep](https://docs.rs/nodejs_path/latest/nodejs_path/posix/constant.sep.html)
-  - [ ] path.toNamespacedPath(path)
+  - [ ] ~~path.toNamespacedPath(path)~~
 - win32
   - [ ] path.basename(path[, ext])
   - [x] [path.delimiter](https://docs.rs/nodejs_path/latest/nodejs_path/win32/constant.delimiter.html)
@@ -33,7 +33,7 @@ Port path module (and tests) of nodejs to rust.
   - [ ] path.relative(from, to)
   - [ ] path.resolve([...paths])
   - [x] [path.sep](https://docs.rs/nodejs_path/latest/nodejs_path/win32/constant.sep.html)
-  - [ ] path.toNamespacedPath(path)
+  - [ ] ~~path.toNamespacedPath(path)~~
 
 # Related sources
 

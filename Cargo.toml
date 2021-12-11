@@ -1,7 +1,9 @@
 [package]
 name = "nodejs_path"
-version = "0.1.0"
+license = "MIT"
+version = "0.0.1"
 edition = "2021"
+description = "Port path module of nodejs to rust using the same algorithms."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

@@ -17,33 +17,115 @@ pub const delimiter: char = ':';
 
 ///
 /// ```rust
-/// assert_eq!(nodejs_path::basename_impl("/foo/bar/baz/asdf/quux.html"), "quux.html".to_string());
+/// assert_eq!(&nodejs_path::basename_impl("/foo/bar/baz/asdf/quux.html"), "quux.html");
 /// ```
+#[inline]
 pub fn basename_impl(path: &str) -> String {
-    parse(path).base
+    basename_impl_without_ext(path, "")
 }
 
 /// ```rust
-/// assert_eq!(nodejs_path::basename_impl_without_ext("/foo/bar/baz/asdf/quux.html", ".html"), "quux".to_string());
+/// assert_eq!(&nodejs_path::basename_impl_without_ext("/foo/bar/baz/asdf/quux.html", ".html"), "quux");
 ///
-/// assert_eq!(nodejs_path::basename_impl_without_ext("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML".to_string());
+/// assert_eq!(&nodejs_path::basename_impl_without_ext("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML");
+///
+/// assert_eq!(&nodejs_path::basename_impl_without_ext("aaa/bbb", "bbb"), "bbb");
 /// ```
 pub fn basename_impl_without_ext(path: &str, ext: &str) -> String {
-    let mut base = parse(path).base;
-    if base.ends_with(ext) {
-        for _i in 0..ext.chars().collect::<Vec<char>>().len() {
-            base.pop();
+    let mut start = 0;
+    let mut end = -1;
+    let mut matched_slash = true;
+
+    let path = path.chars().collect::<Vec<char>>();
+    let ext = ext.chars().collect::<Vec<char>>();
+
+    if ext.len() > 0 && ext.len() <= path.len() {
+        if ext == path {
+            return "".to_owned();
         }
+        let mut ext_idx = ext.len() as i32 - 1;
+        let mut first_non_slash_end = -1;
+        let mut i = path.len() as i32 - 1;
+        while i >= 0 {
+            let code = path.get(i as usize).unwrap();
+
+            if code == &CHAR_FORWARD_SLASH {
+                // If we reached a path separator that was not part of a set of path
+                // separators at the end of the string, stop now
+                if !matched_slash {
+                    start = i + 1;
+                    break;
+                }
+            } else {
+                if first_non_slash_end == -1 {
+                    // We saw the first non-path separator, remember this index in case
+                    // we need it if the extension ends up not matching
+                    matched_slash = false;
+                    first_non_slash_end = i + 1;
+                }
+                if ext_idx >= 0 {
+                    // Try to match the explicit extension
+                    if code == ext.get(ext_idx as usize).unwrap() {
+                        ext_idx -= 1;
+                        if ext_idx == -1 {
+                            // We matched the extension, so mark this as the end of our path
+                            // component
+                            end = i;
+                        }
+                    } else {
+                        // Extension does not match, so our result is the entire path
+                        // component
+                        ext_idx = -1;
+                        end = first_non_slash_end;
+                    }
+                }
+            }
+
+            i -= 1;
+        }
+
+        if start == end {
+            end = first_non_slash_end
+        } else if end == -1 {
+            end = path.len() as i32
+        }
+
+        return path[start as usize..end as usize].iter().collect();
     }
-    base
+
+    let mut i = path.len() as i32 - 1;
+    while i >= 0 {
+        if path.get(i as usize).unwrap() == &CHAR_FORWARD_SLASH {
+            // If we reached a path separator that was not part of a set of path
+            // separators at the end of the string, stop now
+            if !matched_slash {
+                start = i + 1;
+                break;
+            }
+        } else if end == -1 {
+            // We saw the first non-path separator, mark this as the end of our
+            // path component
+            matched_slash = false;
+            end = i + 1;
+        }
+
+        i -= 1;
+    }
+
+    if end == -1 {
+        return "".to_owned();
+    }
+
+    return path[start as usize..end as usize].iter().collect();
 }
 
+/// Returns the last portion of a path, similar to the Unix basename command. Trailing directory separators are ignored.
 /// ```rust
-/// assert_eq!(nodejs_path::basename!("/foo/bar/baz/asdf/quux.html"), "quux.html".to_string());
+/// assert_eq!(&nodejs_path::basename!("/foo/bar/baz/asdf/quux.html"), "quux.html");
 ///
-/// assert_eq!(nodejs_path::basename!("/foo/bar/baz/asdf/quux.html", ".html"), "quux".to_string());
+/// assert_eq!(&nodejs_path::basename!("/foo/bar/baz/asdf/quux.html", ".html"), "quux");
 ///
-/// assert_eq!(nodejs_path::basename!("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML".to_string());
+/// assert_eq!(&nodejs_path::basename!("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML");
 /// ```
 
 #[macro_export]
@@ -57,32 +139,87 @@ macro_rules! basename {
 }
 pub use basename;
 
+/// Returns the directory name of a path, similar to the Unix dirname command. Trailing directory separators are ignored, 
 /// ```rust
-/// assert_eq!(nodejs_path::dirname("/foo/bar/baz/asdf/quux"), "/foo/bar/baz/asdf".to_string());
+/// assert_eq!(&nodejs_path::dirname("/foo/bar/baz/asdf/quux"), "/foo/bar/baz/asdf");
 /// ```
 pub fn dirname(path: &str) -> String {
-    parse(path).dir
-}
+    if path.len() == 0 {
+        ".".to_owned()
+    } else {
+        let path = path.chars().collect::<Vec<char>>();
+        let has_root = path
+            .iter()
+            .next()
+            .map(|c| c == &CHAR_FORWARD_SLASH)
+            .unwrap_or(false);
+        let mut end = -1;
+        let mut matched_slash = true;
 
+        let mut i = path.len() as i32 - 1;
+        while i >= 1 {
+            if path
+                .get(i as usize)
+                .map(|c| c == &CHAR_FORWARD_SLASH)
+                .unwrap_or(false)
+            {
+                if !matched_slash {
+                    end = i;
+                    break;
+                }
+            } else {
+                // We saw the first non-path separator
+                matched_slash = false;
+            }
+
+            i -= 1;
+        }
+
+        if end == -1 {
+            if has_root {
+                "/".to_owned()
+            } else {
+                ".".to_owned()
+            }
+        } else if has_root && end == 1 {
+            "//".to_owned()
+        } else {
+            path[0..end as usize].iter().collect()
+        }
+    }
+}
+/// Returns the extension of the path, from the last occurrence of the . (period) character to end of string in the last portion of the path. If there is no . in the last portion of the path, or if there are no . characters other than the first character of the basename of path, an empty string is returned.
 /// ```rust
-/// assert_eq!(nodejs_path::extname("index.html"), ".html".to_string());
+/// assert_eq!(&nodejs_path::extname("index.html"), ".html");
 ///
-/// assert_eq!(nodejs_path::extname("index.coffee.md"), ".md".to_string());
+/// assert_eq!(&nodejs_path::extname("index.coffee.md"), ".md");
 ///
-/// assert_eq!(nodejs_path::extname("index."), ".".to_string());
+/// assert_eq!(&nodejs_path::extname("index."), ".");
 ///
-/// assert_eq!(nodejs_path::extname("index"), "".to_string());
+/// assert_eq!(&nodejs_path::extname("index"), "");
 ///
-/// assert_eq!(nodejs_path::extname(".index.md"), ".md".to_string());
+/// assert_eq!(&nodejs_path::extname(".index.md"), ".md");
 /// ```
 pub fn extname(path: &str) -> String {
     parse(path).ext
 }
 
+/// Returns a path string from an object. This is the opposite of nodejs_path::parse().
+
+
 pub fn format(path_object: Parsed) -> String {
     format_inner("/", path_object)
 }
 
+/// The method determines if path is an absolute path. If the given path is a zero-length string, false will be returned.
+/// #Example
+/// ```rust
+/// assert_eq!(nodejs_path::posix::is_absolute("/foo/bar"), true); 
+/// assert_eq!(nodejs_path::posix::is_absolute("/baz/.."), true); 
+/// assert_eq!(nodejs_path::posix::is_absolute("qux/"), false); 
+/// assert_eq!(nodejs_path::posix::is_absolute("."), false);  
+/// assert_eq!(nodejs_path::posix::is_absolute(""), false);  
+/// ```
 pub fn is_absolute(path: &str) -> bool {
     path.chars()
         .into_iter()
@@ -91,21 +228,95 @@ pub fn is_absolute(path: &str) -> bool {
         .unwrap_or(false)
 }
 
-pub fn join() {
-    todo!()
+/// The method joins all given path segments together using the platform-specific separator as a delimiter, then normalizes the resulting path.
+/// 
+/// Zero-length path segments are ignored. If the joined path string is a zero-length string then '.' will be returned, representing the current working directory.
+/// ```rust
+/// assert_eq!(nodejs_path::posix::join!("/foo", "bar", "baz/asdf", "quux", ".."), "/foo/bar/baz/asdf");
+/// ```
+#[macro_export]
+macro_rules! join {
+    ( $( $x:expr ),* ) => {
+      {
+        $crate::posix::join_impl(&[
+          $(
+            $x,
+          )*
+        ])
+      }
+    };
+  }
+pub use join;
+
+pub fn join_impl(args: &[&str]) -> String {
+    if args.len() == 0 {
+        ".".to_owned()
+    } else {
+        let mut joined: Option<String> = None;
+        args.iter().for_each(|arg| {
+            if arg.len() > 0 {
+                if let Some(joined) = &mut joined {
+                    joined.push('/');
+                    joined.push_str(*arg);
+                } else {
+                    joined = Some(arg.to_string())
+                }
+            };
+        });
+
+        joined
+            .map(|joined| normalize(&joined))
+            .unwrap_or(".".to_owned())
+    }
 }
 
+/// The path.normalize() method normalizes the given path, resolving '..' and '.' segments.
+/// 
+/// When multiple, sequential path segment separation characters are found (e.g. / on POSIX and either \ or / on Windows), they are replaced by a single instance of the platform-specific path segment /// separator (/ on POSIX and \ on Windows). Trailing separators are preserved.
+/// 
+/// If the path is a zero-length string, '.' is returned, representing the current working directory.
+/// 
+/// ```rust
+/// assert_eq!(nodejs_path::posix::normalize("/foo/bar//baz/asdf/quux/.."), "/foo/bar/baz/asdf");
+/// ```
 pub fn normalize(path: &str) -> String {
     if path.len() == 0 {
-        return ".".to_string();
+        return ".".to_owned();
+    } else {
+        let is_absolute = is_absolute(path);
+        let trailing_separator = path
+            .chars()
+            .last()
+            .map(|c| c == CHAR_FORWARD_SLASH)
+            .unwrap_or(false);
+
+        let mut path = normalize_string(path, !is_absolute, &'/', &is_posix_path_separator);
+
+        if path.len() == 0 {
+            if is_absolute {
+                return "/".to_owned();
+            } else if trailing_separator {
+                return "./".to_owned();
+            } else {
+                return ".".to_owned();
+            }
+        }
+
+        if trailing_separator {
+            path.push('/');
+        }
+
+        if is_absolute {
+            return format!("/{}", path);
+        } else {
+            return path;
+        }
     }
-    todo!()
 }
 
 /// # Example
 /// ```rust
-/// let left = nodejs_path::parse("/home/user/dir/file.txt");
-/// assert_eq!(left, nodejs_path::Parsed{
+/// assert_eq!(nodejs_path::parse("/home/user/dir/file.txt"), nodejs_path::Parsed{
 ///   root: "/".to_string(),
 ///   dir: "/home/user/dir".to_string(),
 ///   base: "file.txt".to_string(),
@@ -150,10 +361,6 @@ pub fn parse(path: &str) -> Parsed {
 
         // Get non-dir info
         while i >= start {
-            println!(
-                "start {} start_dot {} end {} pre_dot_state {} start_part {}",
-                start, start_dot, end, pre_dot_state, start_part
-            );
             let code = *path.get(i as usize).unwrap();
             if code == CHAR_FORWARD_SLASH {
                 // If we reached a path separator that was not part of a set of path
@@ -221,8 +428,97 @@ pub fn parse(path: &str) -> Parsed {
     }
 }
 
-pub fn relative() {
-    todo!()
+///
+/// method returns the relative path from from to to based on the current working directory. If from and to each resolve to the same path (after calling resolve() on each), a zero-length string is returned.
+/// ```rust
+/// assert_eq!(nodejs_path::posix::relative("/data/orandea/test/aaa", "/data/orandea/impl/bbb"), "../../impl/bbb");
+/// ```
+pub fn relative(from: &str, to: &str) -> String {
+    if from == to {
+        "".to_owned()
+    } else {
+        let from = resolve!(&from).chars().collect::<Vec<char>>();
+        let to = resolve!(&to).chars().collect::<Vec<char>>();
+
+        if from == to {
+            "".to_owned()
+        } else {
+            let fromStart = 1;
+            let fromEnd = from.len() as i32;
+            let fromLen = fromEnd - fromStart;
+            let toStart = 1;
+            let toLen = to.len() as i32 - toStart;
+
+            // Compare paths to find the longest common path from root
+            let length = if fromLen < toLen { fromLen } else { toLen };
+
+            let mut lastCommonSep = -1;
+            let mut i = 0;
+
+            while i < length {
+                let fromCode = from.get((fromStart + i) as usize).unwrap();
+                if fromCode != to.get((toStart + i) as usize).unwrap() {
+                    break;
+                } else if fromCode == &CHAR_FORWARD_SLASH {
+                    lastCommonSep = i;
+                }
+                i += 1;
+            }
+
+            if i == length {
+                if toLen > length {
+                    if to.get((toStart + i) as usize).unwrap() == &CHAR_FORWARD_SLASH {
+                        // We get here if `from` is the exact base path for `to`.
+                        // For example: from='/foo/bar'; to='/foo/bar/baz'
+                        return to[(toStart + i + 1) as usize..to.len()].iter().collect();
+                        // return StringPrototypeSlice(to, toStart + i + 1);
+                    }
+                    if i == 0 {
+                        // We get here if `from` is the root
+                        // For example: from='/'; to='/foo'
+                        return to[(toStart + i) as usize..to.len()].iter().collect();
+                    }
+                } else if fromLen > length {
+                    if from.get((fromStart + i) as usize).unwrap() == &CHAR_FORWARD_SLASH {
+                        // We get here if `to` is the exact base path for `from`.
+                        // For example: from='/foo/bar/baz'; to='/foo/bar'
+                        lastCommonSep = i;
+                    } else if i == 0 {
+                        // We get here if `to` is the root.
+                        // For example: from='/foo/bar'; to='/'
+                        lastCommonSep = 0;
+                    }
+                }
+            }
+
+            let mut out = "".to_owned();
+            // Generate the relative path based on the path difference between `to`
+            // and `from`.
+            let mut i = fromStart + lastCommonSep + 1;
+            while i <= fromEnd {
+                if i == fromEnd || from.get(i as usize).unwrap() == &CHAR_FORWARD_SLASH {
+                    if out.len() == 0 {
+                        out.push_str("..")
+                    } else {
+                        out.push_str("/..")
+                    }
+                    // out += out.length === 0 ? '..' : '/..';
+                }
+                i += 1;
+            }
+
+            // Lastly, append the rest of the destination (`to`) path that comes after
+            // the common path parts.
+            format!(
+                "{}{}",
+                &out,
+                &to[(toStart + lastCommonSep) as usize..to.len()]
+                    .iter()
+                    .collect::<String>()
+            )
+            // return `${out}${StringPrototypeSlice(to, toStart + lastCommonSep)}`;
+        }
+    }
 }
 
 pub fn resolve_impl(args: &[&str]) -> String {
@@ -276,14 +572,14 @@ pub fn resolve_impl(args: &[&str]) -> String {
     }
 }
 
-/// #Example
+/// Resolves a sequence of paths or path segments into an absolute path.
 ///
 /// ```rust
-/// assert_eq!(nodejs_path::resolve!("/foo/bar", "./baz"), "/foo/bar/baz".to_string());
+/// assert_eq!(&nodejs_path::resolve!("/foo/bar", "./baz"), "/foo/bar/baz");
 ///
-/// assert_eq!(nodejs_path::resolve!("/foo/bar", "/tmp/file/"), "/tmp/file".to_string());
+/// assert_eq!(&nodejs_path::resolve!("/foo/bar", "/tmp/file/"), "/tmp/file");
 ///
-/// assert_eq!(nodejs_path::resolve!("/home/myself/node", "wwwroot", "static_files/png/", "../gif/image.gif"), "/home/myself/node/wwwroot/static_files/gif/image.gif".to_string());
+/// assert_eq!(&nodejs_path::resolve!("/home/myself/node", "wwwroot", "static_files/png/", "../gif/image.gif"), "/home/myself/node/wwwroot/static_files/gif/image.gif");
 ///
 /// assert_eq!(nodejs_path::resolve!("."), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
 ///
