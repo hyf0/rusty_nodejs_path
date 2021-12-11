@@ -34,7 +34,7 @@ fn check_format_for_posix(test_cases: &[(Parsed, String)]) {
 
 #[test]
 fn posix_tests() {
-    let win_paths = vec![
+    let _win_paths = vec![
         // [path, root]
         vec!["C:\\path\\dir\\index.html", "C:\\"],
         vec!["C:\\another_path\\DIR\\1\\2\\33\\\\index", "C:\\"],

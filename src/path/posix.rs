@@ -443,50 +443,50 @@ pub fn relative(from: &str, to: &str) -> String {
         if from == to {
             "".to_owned()
         } else {
-            let fromStart = 1;
-            let fromEnd = from.len() as i32;
-            let fromLen = fromEnd - fromStart;
-            let toStart = 1;
-            let toLen = to.len() as i32 - toStart;
+            let from_start = 1;
+            let from_end = from.len() as i32;
+            let from_len = from_end - from_start;
+            let to_start = 1;
+            let to_len = to.len() as i32 - to_start;
 
             // Compare paths to find the longest common path from root
-            let length = if fromLen < toLen { fromLen } else { toLen };
+            let length = if from_len < to_len { from_len } else { to_len };
 
-            let mut lastCommonSep = -1;
+            let mut last_common_sep = -1;
             let mut i = 0;
 
             while i < length {
-                let fromCode = from.get((fromStart + i) as usize).unwrap();
-                if fromCode != to.get((toStart + i) as usize).unwrap() {
+                let from_code = from.get((from_start + i) as usize).unwrap();
+                if from_code != to.get((to_start + i) as usize).unwrap() {
                     break;
-                } else if fromCode == &CHAR_FORWARD_SLASH {
-                    lastCommonSep = i;
+                } else if from_code == &CHAR_FORWARD_SLASH {
+                    last_common_sep = i;
                 }
                 i += 1;
             }
 
             if i == length {
-                if toLen > length {
-                    if to.get((toStart + i) as usize).unwrap() == &CHAR_FORWARD_SLASH {
+                if to_len > length {
+                    if to.get((to_start + i) as usize).unwrap() == &CHAR_FORWARD_SLASH {
                         // We get here if `from` is the exact base path for `to`.
                         // For example: from='/foo/bar'; to='/foo/bar/baz'
-                        return to[(toStart + i + 1) as usize..to.len()].iter().collect();
+                        return to[(to_start + i + 1) as usize..to.len()].iter().collect();
                         // return StringPrototypeSlice(to, toStart + i + 1);
                     }
                     if i == 0 {
                         // We get here if `from` is the root
                         // For example: from='/'; to='/foo'
-                        return to[(toStart + i) as usize..to.len()].iter().collect();
+                        return to[(to_start + i) as usize..to.len()].iter().collect();
                     }
-                } else if fromLen > length {
-                    if from.get((fromStart + i) as usize).unwrap() == &CHAR_FORWARD_SLASH {
+                } else if from_len > length {
+                    if from.get((from_start + i) as usize).unwrap() == &CHAR_FORWARD_SLASH {
                         // We get here if `to` is the exact base path for `from`.
                         // For example: from='/foo/bar/baz'; to='/foo/bar'
-                        lastCommonSep = i;
+                        last_common_sep = i;
                     } else if i == 0 {
                         // We get here if `to` is the root.
                         // For example: from='/foo/bar'; to='/'
-                        lastCommonSep = 0;
+                        last_common_sep = 0;
                     }
                 }
             }
@@ -494,9 +494,9 @@ pub fn relative(from: &str, to: &str) -> String {
             let mut out = "".to_owned();
             // Generate the relative path based on the path difference between `to`
             // and `from`.
-            let mut i = fromStart + lastCommonSep + 1;
-            while i <= fromEnd {
-                if i == fromEnd || from.get(i as usize).unwrap() == &CHAR_FORWARD_SLASH {
+            let mut i = from_start + last_common_sep + 1;
+            while i <= from_end {
+                if i == from_end || from.get(i as usize).unwrap() == &CHAR_FORWARD_SLASH {
                     if out.len() == 0 {
                         out.push_str("..")
                     } else {
@@ -512,7 +512,7 @@ pub fn relative(from: &str, to: &str) -> String {
             format!(
                 "{}{}",
                 &out,
-                &to[(toStart + lastCommonSep) as usize..to.len()]
+                &to[(to_start + last_common_sep) as usize..to.len()]
                     .iter()
                     .collect::<String>()
             )
