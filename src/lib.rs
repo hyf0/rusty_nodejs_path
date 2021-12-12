@@ -4,12 +4,12 @@
 //! So using `nodejs_path::basename()` might yield different results on POSIX and Windows:
 //!
 //! On POSIX:
-//! ```ignore
+//! ```no_run
 //! nodejs_path::basename("C:\\temp\\myfile.html");
 //! // Returns: "C:\\temp\\myfile.html"
 //! ```
 //! On Windows:
-//! ```ignore
+//! ```no_run
 //! nodejs_path::basename("C:\\temp\\myfile.html");
 //! Returns: "myfile.html"
 //! ```
