@@ -4,6 +4,7 @@ license = "MIT"
 version = "0.0.3"
 edition = "2021"
 description = "Port path module (and tests) of nodejs to rust using the same algorithms."
+repository = "https://github.com/iheyunfei/rusty_nodejs_path"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
