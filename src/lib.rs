@@ -4,14 +4,14 @@
 //! So using `nodejs_path::basename()` might yield different results on POSIX and Windows:
 //!
 //! On POSIX:
-//! ```no_run
-//! nodejs_path::basename("C:\\temp\\myfile.html");
+//!```no_run
+//! nodejs_path::basename!("C:\\temp\\myfile.html");
 //! // Returns: "C:\\temp\\myfile.html"
-//! ```
+//!```
 //! On Windows:
 //! ```no_run
-//! nodejs_path::basename("C:\\temp\\myfile.html");
-//! Returns: "myfile.html"
+//! nodejs_path::basename!("C:\\temp\\myfile.html");
+//! // Returns: "myfile.html"
 //! ```
 //! To achieve consistent results when working with Windows file paths on any operating system, use [`nodejs_path::win32`](win32):
 //! On POSIX and Windows:
