@@ -33,82 +33,80 @@ pub(crate) fn normalize_string(
     let mut dots = 0;
     let mut code = ' ';
 
-    {
-        let mut i = 0;
-        let path_len = path.len();
+    let mut i = 0;
+    let path_len = path.len();
 
-        while i <= path_len {
-            if i < path_len {
-                code = *path.get(i).unwrap();
-            } else if is_path_separator(&code) {
-                break;
-            } else {
-                code = CHAR_FORWARD_SLASH
-            }
-
-            if is_path_separator(&code) {
-                if last_slash == i as i32 - 1 || dots == 1 {
-                    // noop
-                } else if dots == 2 {
-                    if res.len() < 2
-                        || last_segment_length != 2
-                        || res.get(res.len() - 1).unwrap() != &CHAR_DOT
-                        || res.get(res.len() - 2).unwrap() != &CHAR_DOT
-                    {
-                        if res.len() > 2 {
-                            let last_slash_index =
-                                last_index_of(&res, separator).map_or(-1, |s| s as i32);
-                            if last_slash_index == -1 {
-                                res = vec![];
-                                last_segment_length = 0
-                            } else {
-                                res = res[0..last_slash_index as usize].to_vec();
-                                last_segment_length = res.len() as i32
-                                    - 1
-                                    - last_index_of(&res, separator).map_or(-1, |s| s as i32);
-                            }
-                            last_slash = i as i32;
-                            dots = 0;
-
-                            i += 1;
-                            continue;
-                        } else if res.len() != 0 {
-                            res = vec![];
-                            last_segment_length = 0;
-                            last_slash = i as i32;
-                            dots = 0;
-
-                            i += 1;
-                            continue;
-                        }
-                    }
-                    if allow_above_root {
-                        if res.len() > 0 {
-                            res.push(*separator);
-                        }
-                        res.push('.');
-                        res.push('.');
-                        last_segment_length = 2;
-                    }
-                } else {
-                    if res.len() > 0 {
-                        res.push(*separator)
-                    }
-                    path[(last_slash + 1) as usize..i as usize]
-                        .iter()
-                        .for_each(|c| res.push(*c));
-                    last_segment_length = i as i32 - last_slash - 1;
-                }
-                last_slash = i as i32;
-                dots = 0;
-            } else if code == CHAR_DOT && dots != -1 {
-                dots += 1;
-            } else {
-                dots = -1;
-            }
-
-            i += 1;
+    while i <= path_len {
+        if i < path_len {
+            code = *path.get(i).unwrap();
+        } else if is_path_separator(&code) {
+            break;
+        } else {
+            code = CHAR_FORWARD_SLASH
         }
+
+        if is_path_separator(&code) {
+            if last_slash == i as i32 - 1 || dots == 1 {
+                // noop
+            } else if dots == 2 {
+                if res.len() < 2
+                    || last_segment_length != 2
+                    || res.get(res.len() - 1).unwrap() != &CHAR_DOT
+                    || res.get(res.len() - 2).unwrap() != &CHAR_DOT
+                {
+                    if res.len() > 2 {
+                        let last_slash_index =
+                            last_index_of(&res, separator).map_or(-1, |s| s as i32);
+                        if last_slash_index == -1 {
+                            res = vec![];
+                            last_segment_length = 0
+                        } else {
+                            res = res[0..last_slash_index as usize].to_vec();
+                            last_segment_length = res.len() as i32
+                                - 1
+                                - last_index_of(&res, separator).map_or(-1, |s| s as i32);
+                        }
+                        last_slash = i as i32;
+                        dots = 0;
+
+                        i += 1;
+                        continue;
+                    } else if res.len() != 0 {
+                        res = vec![];
+                        last_segment_length = 0;
+                        last_slash = i as i32;
+                        dots = 0;
+
+                        i += 1;
+                        continue;
+                    }
+                }
+                if allow_above_root {
+                    if res.len() > 0 {
+                        res.push(*separator);
+                    }
+                    res.push('.');
+                    res.push('.');
+                    last_segment_length = 2;
+                }
+            } else {
+                if res.len() > 0 {
+                    res.push(*separator)
+                }
+                path[(last_slash + 1) as usize..i as usize]
+                    .iter()
+                    .for_each(|c| res.push(*c));
+                last_segment_length = i as i32 - last_slash - 1;
+            }
+            last_slash = i as i32;
+            dots = 0;
+        } else if code == CHAR_DOT && dots != -1 {
+            dots += 1;
+        } else {
+            dots = -1;
+        }
+
+        i += 1;
     }
 
     res.into_iter().collect()

@@ -1,3 +1,5 @@
+use std::{borrow::Cow, ops::Add};
+
 use crate::Parsed;
 
 use super::shared::{
@@ -139,7 +141,7 @@ macro_rules! basename {
 }
 pub use basename;
 
-/// Returns the directory name of a path, similar to the Unix dirname command. Trailing directory separators are ignored, 
+/// Returns the directory name of a path, similar to the Unix dirname command. Trailing directory separators are ignored,
 /// ```rust
 /// assert_eq!(&nodejs_path::dirname("/foo/bar/baz/asdf/quux"), "/foo/bar/baz/asdf");
 /// ```
@@ -206,7 +208,6 @@ pub fn extname(path: &str) -> String {
 
 /// Returns a path string from an object. This is the opposite of nodejs_path::parse().
 
-
 pub fn format(path_object: Parsed) -> String {
     format_inner("/", path_object)
 }
@@ -214,22 +215,18 @@ pub fn format(path_object: Parsed) -> String {
 /// The method determines if path is an absolute path. If the given path is a zero-length string, false will be returned.
 /// #Example
 /// ```rust
-/// assert_eq!(nodejs_path::posix::is_absolute("/foo/bar"), true); 
-/// assert_eq!(nodejs_path::posix::is_absolute("/baz/.."), true); 
-/// assert_eq!(nodejs_path::posix::is_absolute("qux/"), false); 
+/// assert_eq!(nodejs_path::posix::is_absolute("/foo/bar"), true);
+/// assert_eq!(nodejs_path::posix::is_absolute("/baz/.."), true);
+/// assert_eq!(nodejs_path::posix::is_absolute("qux/"), false);
 /// assert_eq!(nodejs_path::posix::is_absolute("."), false);  
 /// assert_eq!(nodejs_path::posix::is_absolute(""), false);  
 /// ```
 pub fn is_absolute(path: &str) -> bool {
-    path.chars()
-        .into_iter()
-        .next()
-        .map(|c| c == CHAR_FORWARD_SLASH)
-        .unwrap_or(false)
+    path.bytes().next().map(|c| c == b'/').unwrap_or(false)
 }
 
 /// The method joins all given path segments together using the platform-specific separator as a delimiter, then normalizes the resulting path.
-/// 
+///
 /// Zero-length path segments are ignored. If the joined path string is a zero-length string then '.' will be returned, representing the current working directory.
 /// ```rust
 /// assert_eq!(nodejs_path::posix::join!("/foo", "bar", "baz/asdf", "quux", ".."), "/foo/bar/baz/asdf");
@@ -252,30 +249,32 @@ pub fn join_impl(args: &[&str]) -> String {
     if args.len() == 0 {
         ".".to_owned()
     } else {
-        let mut joined: Option<String> = None;
-        args.iter().for_each(|arg| {
-            if arg.len() > 0 {
-                if let Some(joined) = &mut joined {
-                    joined.push('/');
-                    joined.push_str(*arg);
-                } else {
-                    joined = Some(arg.to_string())
-                }
-            };
-        });
-
-        joined
-            .map(|joined| normalize(&joined))
-            .unwrap_or(".".to_owned())
+        // let length =
+        let joined = args
+            .iter()
+            .filter_map(|&arg| if arg.is_empty() {
+                None
+            } else {
+                Some(Cow::Borrowed(arg))
+            })
+            .reduce(|mut pre, cur| {
+                pre = pre.add("/");
+                pre = pre.add(cur);
+                pre
+            });
+        match joined {
+            Some(joined) => normalize(&joined),
+            None => ".".to_string(),
+        }
     }
 }
 
 /// The path.normalize() method normalizes the given path, resolving '..' and '.' segments.
-/// 
+///
 /// When multiple, sequential path segment separation characters are found (e.g. / on POSIX and either \ or / on Windows), they are replaced by a single instance of the platform-specific path segment /// separator (/ on POSIX and \ on Windows). Trailing separators are preserved.
-/// 
+///
 /// If the path is a zero-length string, '.' is returned, representing the current working directory.
-/// 
+///
 /// ```rust
 /// assert_eq!(nodejs_path::posix::normalize("/foo/bar//baz/asdf/quux/.."), "/foo/bar/baz/asdf");
 /// ```
@@ -564,7 +563,7 @@ pub fn resolve_impl(args: &[&str]) -> String {
     if resolved_absolute {
         "/".to_owned() + &resolved_path
     } else {
-        if resolved_path.len() > 0 {
+        if !resolved_path.is_empty() {
             resolved_path
         } else {
             ".".to_owned()
