@@ -252,10 +252,12 @@ pub fn join_impl(args: &[&str]) -> String {
         // let length =
         let joined = args
             .iter()
-            .filter_map(|&arg| if arg.is_empty() {
-                None
-            } else {
-                Some(Cow::Borrowed(arg))
+            .filter_map(|&arg| {
+                if arg.is_empty() {
+                    None
+                } else {
+                    Some(Cow::Borrowed(arg))
+                }
             })
             .reduce(|mut pre, cur| {
                 pre = pre.add("/");
@@ -276,7 +278,7 @@ pub fn join_impl(args: &[&str]) -> String {
 /// If the path is a zero-length string, '.' is returned, representing the current working directory.
 ///
 /// ```rust
-/// assert_eq!(nodejs_path::posix::normalize("/foo/bar//baz/asdf/quux/.."), "/foo/bar/baz/asdf");
+/// assert_eq!(nodejs_path::posix::normalize("/foo/bar//baz/asdf/quux/../"), "/foo/bar/baz/asdf/");
 /// ```
 pub fn normalize(path: &str) -> String {
     if path.len() == 0 {
@@ -288,28 +290,61 @@ pub fn normalize(path: &str) -> String {
             .last()
             .map(|c| c == CHAR_FORWARD_SLASH)
             .unwrap_or(false);
-
-        let mut path = normalize_string(path, !is_absolute, &'/', &is_posix_path_separator);
-
-        if path.len() == 0 {
-            if is_absolute {
-                return "/".to_owned();
-            } else if trailing_separator {
-                return "./".to_owned();
-            } else {
-                return ".".to_owned();
-            }
-        }
-
-        if trailing_separator {
-            path.push('/');
-        }
-
-        if is_absolute {
-            return format!("/{}", path);
+        let mut consecutive_dd = 0;
+        // let mut path = normalize_string(path, !is_absolute, &'/', &is_posix_path_separator);
+        let mut path_stack = vec![];
+        path.split("/")
+            .filter(|seg| !seg.is_empty())
+            .for_each(|seg| {
+                match seg {
+                    "." => {}
+                    ".." => {
+                        // path_stack.pop();
+                        if consecutive_dd == path_stack.len() {
+                            path_stack.push(seg);
+                            consecutive_dd += 1;
+                        } else {
+                            path_stack.pop();
+                        }
+                    }
+                    other => {
+                        path_stack.push(other);
+                    }
+                }
+            });
+        let mut normalized_path = if is_absolute {
+            // if is absolute path, whatever how many times .. used, it is just the same as /
+            path_stack
+                .iter()
+                .position(|&str| str != "..")
+                .map(|item| path_stack[item..].join("/"))
+                .unwrap_or("".to_string())
         } else {
-            return path;
+            path_stack.join("/")
+        };
+        // if path.len() == 0 {
+        //     if is_absolute {
+        //         return "/".to_owned();
+        //     } else if trailing_separator {
+        //         return "./".to_owned();
+        //     } else {
+        //         return ".".to_owned();
+        //     }
+        // }
+        // if is_ab
+        if is_absolute {
+            normalized_path = "/".to_string() + &normalized_path;
         }
+
+        if normalized_path.is_empty() {
+            normalized_path.push('.');
+        }
+
+        if trailing_separator && normalized_path != "/" {
+            normalized_path.push('/');
+        }
+
+        normalized_path
     }
 }
 
