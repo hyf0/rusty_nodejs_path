@@ -322,16 +322,6 @@ pub fn normalize(path: &str) -> String {
         } else {
             path_stack.join("/")
         };
-        // if path.len() == 0 {
-        //     if is_absolute {
-        //         return "/".to_owned();
-        //     } else if trailing_separator {
-        //         return "./".to_owned();
-        //     } else {
-        //         return ".".to_owned();
-        //     }
-        // }
-        // if is_ab
         if is_absolute {
             normalized_path = "/".to_string() + &normalized_path;
         }
