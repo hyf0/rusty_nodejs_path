@@ -278,7 +278,7 @@ pub fn join_impl(args: &[&str]) -> String {
 /// If the path is a zero-length string, '.' is returned, representing the current working directory.
 ///
 /// ```rust
-/// assert_eq!(nodejs_path::posix::normalize("/foo/bar//baz/asdf/quux/../"), "/foo/bar/baz/asdf/");
+/// assert_eq!(nodejs_path::posix::normalize("/foo/bar//baz/asdf/quux/.."), "/foo/bar/baz/asdf");
 /// ```
 pub fn normalize(path: &str) -> String {
     if path.len() == 0 {
