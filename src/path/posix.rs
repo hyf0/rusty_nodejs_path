@@ -555,7 +555,7 @@ pub fn resolve_impl(args: &[&str]) -> String {
         let path = if i >= 0 {
             args.get(i.clone() as usize).unwrap().to_string()
         } else {
-            posix_cwd()
+            posix_cwd().to_owned()
         };
 
         // Skip empty entries
@@ -625,28 +625,34 @@ pub use resolve;
 
 pub fn to_namespaced_path() {}
 
-fn posix_cwd() -> String {
-    let cwd = std::env::current_dir()
-        .unwrap()
-        .to_str()
-        .unwrap()
-        .to_owned();
+use once_cell::sync::OnceCell;
 
-    if cfg!(target_os = "windows") {
-        // Converts Windows' backslash path separators to POSIX forward slashes
-        // and truncates any drive indicator
-        // const regexp = /\\/g;
-        // return () => {
-        //   const cwd = StringPrototypeReplace(process.cwd(), regexp, '/');
-        //   return StringPrototypeSlice(cwd, StringPrototypeIndexOf(cwd, '/'));
-        // };
-        return cwd
-            .chars()
-            .map(|c| if c == '\\' { '/' } else { c })
-            .take_while(|c| c != &'/')
-            .collect();
-    }
+pub fn posix_cwd() -> &'static str {
+  static INSTANCE: OnceCell<String> = OnceCell::new();
+  INSTANCE.get_or_init(|| {
+      let cwd = std::env::current_dir()
+          .unwrap()
+          .to_str()
+          .unwrap()
+          .to_owned();
 
-    // We're already on POSIX, no need for any transformations
-    return cwd;
+      if cfg!(target_os = "windows") {
+          // Converts Windows' backslash path separators to POSIX forward slashes
+          // and truncates any drive indicator
+          // const regexp = /\\/g;
+          // return () => {
+          //   const cwd = StringPrototypeReplace(process.cwd(), regexp, '/');
+          //   return StringPrototypeSlice(cwd, StringPrototypeIndexOf(cwd, '/'));
+          // };
+          // FIXME: 
+          return cwd
+              .chars()
+              .map(|c| if c == '\\' { '/' } else { c })
+              .take_while(|c| c != &'/')
+              .collect();
+      }
+
+      // We're already on POSIX, no need for any transformations
+      return cwd;
+  })
 }
