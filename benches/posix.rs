@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use nodejs_path::{join, join_impl};
+use nodejs_path::{posix};
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("join_impl", |b| {
@@ -54,9 +54,14 @@ fn criterion_benchmark(c: &mut Criterion) {
         ];
         b.iter(|| {
             for join_seq in &join_tests {
-                let _res = join_impl(&join_seq.0);
+                let _res = posix::join_impl(&join_seq.0);
             }
         })
+    });
+    c.bench_function("cwd", |b| {
+        b.iter(|| {
+          posix::resolve!();
+      })
     });
 }
 
