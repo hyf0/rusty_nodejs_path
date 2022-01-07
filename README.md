@@ -26,7 +26,7 @@ Port path module (and tests) of nodejs to rust using the same algorithms.
   - [ ] path.dirname(path)
   - [ ] path.extname(path)
   - [ ] path.format(pathObject)
-  - [ ] path.isAbsolute(path)
+  - [x] path.isAbsolute(path)
   - [ ] path.join([...paths])
   - [ ] path.normalize(path)
   - [ ] path.parse(path)

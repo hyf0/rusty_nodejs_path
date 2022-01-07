@@ -153,11 +153,16 @@ pub(crate) fn is_posix_path_separator(code: &char) -> bool {
     code == &CHAR_FORWARD_SLASH
 }
 
+#[inline]
+pub(crate) fn is_path_separator(code: &char) -> bool {
+    code == &CHAR_FORWARD_SLASH || code == &CHAR_BACKWARD_SLASH
+}
+
 // Alphabet chars.
-// const CHAR_UPPERCASE_A: char = 65; /* A */
-// const CHAR_LOWERCASE_A: char = 97; /* a */
-// const CHAR_UPPERCASE_Z: char = 90; /* Z */
-// const CHAR_LOWERCASE_Z: char = 122; /* z */
+pub(crate) const CHAR_UPPERCASE_A: char = 'A'; /* A */
+pub(crate) const CHAR_LOWERCASE_A: char = 'a'; /* a */
+pub(crate) const CHAR_UPPERCASE_Z: char = 'Z'; /* Z */
+pub(crate) const CHAR_LOWERCASE_Z: char = 'z'; /* z */
 // const CHAR_UPPERCASE_C: char = 67; /* C */
 // const CHAR_LOWERCASE_B: char = 98; /* b */
 // const CHAR_LOWERCASE_E: char = 101; /* e */
@@ -165,9 +170,9 @@ pub(crate) fn is_posix_path_separator(code: &char) -> bool {
 // // Non-alphabetic chars.
 pub(crate) const CHAR_DOT: char = '.'; /* . */
 pub(crate) const CHAR_FORWARD_SLASH: char = '/'; /* / */
-// const CHAR_BACKWARD_SLASH: char = 92; /* \ */
+const CHAR_BACKWARD_SLASH: char = '\\'; /* \ */
 // const CHAR_VERTICAL_LINE: char = 124; /* | */
-// const CHAR_COLON: char = 58; /* : */
+pub(crate) const CHAR_COLON: char = ':'; /* : */
 // const CHAR_QUESTION_MARK: char = 63; /* ? */
 // const CHAR_UNDERSCORE: char = 95; /* _ */
 // const CHAR_LINE_FEED: char = 10; /* \n */
