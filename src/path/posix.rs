@@ -1,4 +1,4 @@
-use std::{borrow::Cow, ops::Add};
+use std::{borrow::Cow, ops::Add, path::PathBuf};
 
 use crate::Parsed;
 
@@ -625,34 +625,34 @@ pub use resolve;
 
 pub fn to_namespaced_path() {}
 
-use once_cell::sync::OnceCell;
+use once_cell::sync::Lazy;
 
-pub fn posix_cwd() -> &'static str {
-  static INSTANCE: OnceCell<String> = OnceCell::new();
-  INSTANCE.get_or_init(|| {
-      let cwd = std::env::current_dir()
-          .unwrap()
-          .to_str()
-          .unwrap()
-          .to_owned();
+pub(crate) static POSIX_CWD: Lazy<String> = Lazy::new(|| {
+    let mut cwd = std::env::current_dir()
+        .unwrap_or(PathBuf::from(""))
+        .to_str()
+        .unwrap()
+        .to_owned();
+    if cfg!(target_os = "windows") {
+        // Converts Windows' backslash path separators to POSIX forward slashes
+        // and truncates any drive indicator
+        // const regexp = /\\/g;
+        // return () => {
+        //   const cwd = StringPrototypeReplace(process.cwd(), regexp, '/');
+        //   return StringPrototypeSlice(cwd, StringPrototypeIndexOf(cwd, '/'));
+        // };
+        // FIXME:
+        cwd = cwd
+            .chars()
+            .map(|c| if c == '\\' { '/' } else { c })
+            .take_while(|c| c != &'/')
+            .collect()
+    };
 
-      if cfg!(target_os = "windows") {
-          // Converts Windows' backslash path separators to POSIX forward slashes
-          // and truncates any drive indicator
-          // const regexp = /\\/g;
-          // return () => {
-          //   const cwd = StringPrototypeReplace(process.cwd(), regexp, '/');
-          //   return StringPrototypeSlice(cwd, StringPrototypeIndexOf(cwd, '/'));
-          // };
-          // FIXME: 
-          return cwd
-              .chars()
-              .map(|c| if c == '\\' { '/' } else { c })
-              .take_while(|c| c != &'/')
-              .collect();
-      }
+    // We're already on POSIX, no need for any transformations
+    cwd
+});
 
-      // We're already on POSIX, no need for any transformations
-      return cwd;
-  })
+pub(crate) fn posix_cwd() -> &'static str {
+    &POSIX_CWD
 }

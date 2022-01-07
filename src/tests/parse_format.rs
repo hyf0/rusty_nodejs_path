@@ -9,7 +9,6 @@ use nodejs_path::{
 fn check_parse_format_for_posix(paths: &[(&str, &str)]) {
     paths.iter().for_each(|(element, root)| {
         let output = posix::parse(element);
-        println!("{:#?} for {:?}", output, element);
         assert_eq!(&posix::format(output.clone()), element);
         assert_eq!(&output.root, root);
         assert!(output.dir.starts_with(&output.root));
@@ -29,7 +28,6 @@ fn check_parse_format_for_posix(paths: &[(&str, &str)]) {
 fn check_format_for_posix(test_cases: &[(Parsed, String)]) {
     use posix as path;
     test_cases.iter().for_each(|(input, right)| {
-        println!("input {:#?}", input);
         assert_eq!(&path::format(input.clone()), right);
     });
 }
