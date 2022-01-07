@@ -1,3 +1,5 @@
+use crate as nodejs_path;
+
 #[test]
 fn unix() {
     // On *nix, backslash is a valid name component like any other character.

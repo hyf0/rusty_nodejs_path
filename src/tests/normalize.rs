@@ -1,3 +1,6 @@
+
+use crate as nodejs_path;
+
 #[test]
 fn posix() {
     assert_eq!(&nodejs_path::posix::normalize("/foo/../../../bar"), "/bar");

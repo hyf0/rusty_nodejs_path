@@ -1,3 +1,6 @@
+use crate as nodejs_path;
+
+
 use nodejs_path::{
     posix::{self as posix},
     Parsed,

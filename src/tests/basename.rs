@@ -1,3 +1,5 @@
+use crate as nodejs_path;
+
 #[test]
 fn universal() {
     assert_eq!(nodejs_path::basename!(".js", ".js"), "".to_string());

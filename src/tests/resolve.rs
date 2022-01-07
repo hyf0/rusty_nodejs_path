@@ -1,3 +1,5 @@
+use crate as nodejs_path;
+
 use nodejs_path::posix;
 
 fn posixy_cwd() -> String {

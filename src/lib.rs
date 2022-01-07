@@ -42,6 +42,9 @@
 
 // Align to https://nodejs.org/docs/latest-v16.x/api/path.html
 
+#[cfg(test)]
+mod tests;
+
 mod path;
 
 #[cfg(target_family = "unix")]

@@ -1,3 +1,5 @@
+use crate as nodejs_path;
+
 #[test]
 fn unix() {
     assert_eq!(nodejs_path::posix::is_absolute("/home/foo"), true);

@@ -1,3 +1,5 @@
+use crate as nodejs_path;
+
 #[test]
 fn unix() {
     let cases = [
