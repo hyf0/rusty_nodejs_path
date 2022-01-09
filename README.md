@@ -37,7 +37,7 @@ Port path module (and tests) of nodejs to rust using the same algorithms.
   - [x] [path.sep](https://docs.rs/nodejs_path/latest/nodejs_path/win32/constant.sep.html)
   - [ ] ~~path.toNamespacedPath(path)~~
   - enhanced
-    - [x] [process.cwd()]
+    - [ ] [process.cwd()]
 
 # Related sources
 
