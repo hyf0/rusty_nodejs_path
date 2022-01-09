@@ -555,7 +555,7 @@ pub fn resolve_impl(args: &[&str]) -> String {
         let path = if i >= 0 {
             args.get(i.clone() as usize).unwrap().to_string()
         } else {
-            posix_cwd().to_owned()
+            cwd().to_owned()
         };
 
         // Skip empty entries
@@ -630,9 +630,8 @@ use once_cell::sync::Lazy;
 pub(crate) static POSIX_CWD: Lazy<String> = Lazy::new(|| {
     let mut cwd = std::env::current_dir()
         .unwrap_or(PathBuf::from(""))
-        .to_str()
-        .unwrap()
-        .to_owned();
+        .to_string_lossy()
+        .to_string();
     if cfg!(target_os = "windows") {
         // Converts Windows' backslash path separators to POSIX forward slashes
         // and truncates any drive indicator
@@ -653,6 +652,7 @@ pub(crate) static POSIX_CWD: Lazy<String> = Lazy::new(|| {
     cwd
 });
 
-pub(crate) fn posix_cwd() -> &'static str {
+/// Get current working directory. Just like `process.cwd()`
+pub fn cwd() -> &'static str {
     &POSIX_CWD
 }

@@ -20,6 +20,8 @@ Port path module (and tests) of nodejs to rust using the same algorithms.
   - [x] [path.resolve([...paths])](https://docs.rs/nodejs_path/latest/nodejs_path/posix/macro.resolve.html)
   - [x] [path.sep](https://docs.rs/nodejs_path/latest/nodejs_path/posix/constant.sep.html)
   - [ ] ~~path.toNamespacedPath(path)~~
+  - enhanced
+    - [x] [process.cwd()]
 - win32
   - [ ] path.basename(path[, ext])
   - [x] [path.delimiter](https://docs.rs/nodejs_path/latest/nodejs_path/win32/constant.delimiter.html)
@@ -34,6 +36,8 @@ Port path module (and tests) of nodejs to rust using the same algorithms.
   - [ ] path.resolve([...paths])
   - [x] [path.sep](https://docs.rs/nodejs_path/latest/nodejs_path/win32/constant.sep.html)
   - [ ] ~~path.toNamespacedPath(path)~~
+  - enhanced
+    - [x] [process.cwd()]
 
 # Related sources
 
