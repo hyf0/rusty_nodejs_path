@@ -653,6 +653,7 @@ pub(crate) static POSIX_CWD: Lazy<String> = Lazy::new(|| {
 });
 
 /// Get current working directory. Just like `process.cwd()`
+#[inline]
 pub fn cwd() -> &'static str {
     &POSIX_CWD
 }

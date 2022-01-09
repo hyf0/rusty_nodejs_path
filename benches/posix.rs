@@ -60,7 +60,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     });
     c.bench_function("cwd", |b| {
         b.iter(|| {
-          posix::resolve!();
+          posix::cwd();
       })
     });
 }
