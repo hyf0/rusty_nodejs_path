@@ -3,6 +3,7 @@ name = "nodejs_path"
 license = "MIT"
 version = "0.0.8"
 edition = "2021"
+keywords = ["path", "nodejs"]
 description = "Port path module (and tests) of nodejs to rust using the same algorithms."
 repository = "https://github.com/iheyunfei/rusty_nodejs_path"
 
