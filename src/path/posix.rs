@@ -230,9 +230,15 @@ pub fn is_absolute(path: &str) -> bool {
 /// Zero-length path segments are ignored. If the joined path string is a zero-length string then '.' will be returned, representing the current working directory.
 /// ```rust
 /// assert_eq!(nodejs_path::posix::join!("/foo", "bar", "baz/asdf", "quux", ".."), "/foo/bar/baz/asdf");
+/// assert_eq!(nodejs_path::posix::join!(), ".");
 /// ```
 #[macro_export]
 macro_rules! join {
+    ( ) => {
+      {
+        $crate::posix::join_impl::<&str>(&[])
+      }
+    };
     ( $( $x:expr ),* ) => {
       {
         $crate::posix::join_impl(&[
@@ -245,14 +251,15 @@ macro_rules! join {
   }
 pub use join;
 
-pub fn join_impl(args: &[&str]) -> String {
+pub fn join_impl<T: AsRef<str>>(args: &[T]) -> String {
     if args.len() == 0 {
         ".".to_owned()
     } else {
         // let length =
         let joined = args
             .iter()
-            .filter_map(|&arg| {
+            .map(|s| s.as_ref())
+            .filter_map(|arg| {
                 if arg.is_empty() {
                     None
                 } else {
@@ -545,7 +552,7 @@ pub fn relative(from: &str, to: &str) -> String {
     }
 }
 
-pub fn resolve_impl(args: &[&str]) -> String {
+pub fn resolve_impl<T: AsRef<str>>(args: &[T]) -> String {
     let mut resolved_path = "".to_owned();
     let mut resolved_absolute = false;
 
@@ -553,7 +560,7 @@ pub fn resolve_impl(args: &[&str]) -> String {
 
     while i >= -1 && !resolved_absolute {
         let path = if i >= 0 {
-            args.get(i.clone() as usize).unwrap().to_string()
+            args.get(i.clone() as usize).unwrap().as_ref().to_string()
         } else {
             cwd().to_owned()
         };
@@ -611,6 +618,11 @@ pub fn resolve_impl(args: &[&str]) -> String {
 /// ```
 #[macro_export]
 macro_rules! resolve {
+    (  ) => {
+      {
+        $crate::posix::resolve_impl::<&str>(&[])
+      }
+    };
     ( $( $x:expr ),* ) => {
       {
         $crate::posix::resolve_impl(&[
