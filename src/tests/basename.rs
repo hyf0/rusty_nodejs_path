@@ -59,7 +59,6 @@ fn universal() {
     assert_eq!(nodejs_path::basename!("a", "a"), "".to_string());
 }
 
-#[cfg(target_family = "unix")]
 #[test]
 fn unix() {
     // On unix a backslash is just treated as any other character.

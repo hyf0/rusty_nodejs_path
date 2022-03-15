@@ -4,18 +4,20 @@
 //! So using `nodejs_path::basename()` might yield different results on POSIX and Windows:
 //!
 //! On POSIX:
-//!```no_run
+//!```rust
+//! #[cfg(target_family = "unix")]
 //! nodejs_path::basename!("C:\\temp\\myfile.html");
 //! // Returns: "C:\\temp\\myfile.html"
 //!```
 //! On Windows:
-//! ```no_run
+//! ```rust
+//! #[cfg(target_family = "windows")]
 //! nodejs_path::basename!("C:\\temp\\myfile.html");
 //! // Returns: "myfile.html"
 //! ```
 //! To achieve consistent results when working with Windows file paths on any operating system, use [`nodejs_path::win32`](win32):
 //! On POSIX and Windows:
-//! ```ignore
+//! ```rust
 //! assert_eq!(&nodejs_path::win32::basename!("C:\\temp\\myfile.html"), "myfile.html")
 //! ```
 //! To achieve consistent results when working with POSIX file paths on any operating system, use [`nodejs_path::posix`](posix):
