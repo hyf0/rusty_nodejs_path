@@ -1,5 +1,7 @@
 use crate as nodejs_path;
 
+
+#[cfg(target_family = "unix")]
 #[test]
 fn unix() {
     assert_eq!(nodejs_path::posix::is_absolute("/home/foo"), true);
@@ -8,6 +10,7 @@ fn unix() {
     assert_eq!(nodejs_path::posix::is_absolute("./baz"), false);
 }
 
+#[cfg(target_family = "windows")]
 #[test]
 fn windows() {
     assert_eq!(nodejs_path::win32::is_absolute("/"), true);

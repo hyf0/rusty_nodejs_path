@@ -1,5 +1,6 @@
 use crate as nodejs_path;
 
+#[cfg(target_family = "unix")]
 #[test]
 fn unix() {
     // On *nix, backslash is a valid name component like any other character.

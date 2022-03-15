@@ -1,6 +1,7 @@
 
 use crate as nodejs_path;
 
+#[cfg(target_family = "unix")]
 #[test]
 fn posix() {
     assert_eq!(&nodejs_path::posix::normalize("/foo/../../../bar"), "/bar");
