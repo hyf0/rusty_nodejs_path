@@ -1,3 +1,6 @@
+# Archived. Use [SugarPath](https://github.com/iheyunfei/sugar_path) insead.
+
+
 # rusty_nodejs_path
 Port path module (and tests) of nodejs to rust using the same algorithms.
 
