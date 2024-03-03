@@ -19,7 +19,7 @@ pub const delimiter: char = ':';
 
 ///
 /// ```rust
-/// assert_eq!(&nodejs_path::basename_impl("/foo/bar/baz/asdf/quux.html"), "quux.html");
+/// assert_eq!(&nodejs_path::posix::basename_impl("/foo/bar/baz/asdf/quux.html"), "quux.html");
 /// ```
 #[inline]
 pub fn basename_impl(path: &str) -> String {
@@ -27,11 +27,11 @@ pub fn basename_impl(path: &str) -> String {
 }
 
 /// ```rust
-/// assert_eq!(&nodejs_path::basename_impl_without_ext("/foo/bar/baz/asdf/quux.html", ".html"), "quux");
+/// assert_eq!(&nodejs_path::posix::basename_impl_without_ext("/foo/bar/baz/asdf/quux.html", ".html"), "quux");
 ///
-/// assert_eq!(&nodejs_path::basename_impl_without_ext("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML");
+/// assert_eq!(&nodejs_path::posix::basename_impl_without_ext("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML");
 ///
-/// assert_eq!(&nodejs_path::basename_impl_without_ext("aaa/bbb", "bbb"), "bbb");
+/// assert_eq!(&nodejs_path::posix::basename_impl_without_ext("aaa/bbb", "bbb"), "bbb");
 /// ```
 pub fn basename_impl_without_ext(path: &str, ext: &str) -> String {
     let mut start = 0;
@@ -123,11 +123,11 @@ pub fn basename_impl_without_ext(path: &str, ext: &str) -> String {
 
 /// Returns the last portion of a path, similar to the Unix basename command. Trailing directory separators are ignored.
 /// ```rust
-/// assert_eq!(&nodejs_path::basename!("/foo/bar/baz/asdf/quux.html"), "quux.html");
+/// assert_eq!(&nodejs_path::posix::basename!("/foo/bar/baz/asdf/quux.html"), "quux.html");
 ///
-/// assert_eq!(&nodejs_path::basename!("/foo/bar/baz/asdf/quux.html", ".html"), "quux");
+/// assert_eq!(&nodejs_path::posix::basename!("/foo/bar/baz/asdf/quux.html", ".html"), "quux");
 ///
-/// assert_eq!(&nodejs_path::basename!("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML");
+/// assert_eq!(&nodejs_path::posix::basename!("/foo/bar/baz/asdf/quux.HTML", ".html"), "quux.HTML");
 /// ```
 
 #[macro_export]
@@ -143,7 +143,7 @@ pub use basename;
 
 /// Returns the directory name of a path, similar to the Unix dirname command. Trailing directory separators are ignored,
 /// ```rust
-/// assert_eq!(&nodejs_path::dirname("/foo/bar/baz/asdf/quux"), "/foo/bar/baz/asdf");
+/// assert_eq!(&nodejs_path::posix::dirname("/foo/bar/baz/asdf/quux"), "/foo/bar/baz/asdf");
 /// ```
 pub fn dirname(path: &str) -> String {
     if path.len() == 0 {
@@ -192,21 +192,21 @@ pub fn dirname(path: &str) -> String {
 }
 /// Returns the extension of the path, from the last occurrence of the . (period) character to end of string in the last portion of the path. If there is no . in the last portion of the path, or if there are no . characters other than the first character of the basename of path, an empty string is returned.
 /// ```rust
-/// assert_eq!(&nodejs_path::extname("index.html"), ".html");
+/// assert_eq!(&nodejs_path::posix::extname("index.html"), ".html");
 ///
-/// assert_eq!(&nodejs_path::extname("index.coffee.md"), ".md");
+/// assert_eq!(&nodejs_path::posix::extname("index.coffee.md"), ".md");
 ///
-/// assert_eq!(&nodejs_path::extname("index."), ".");
+/// assert_eq!(&nodejs_path::posix::extname("index."), ".");
 ///
-/// assert_eq!(&nodejs_path::extname("index"), "");
+/// assert_eq!(&nodejs_path::posix::extname("index"), "");
 ///
-/// assert_eq!(&nodejs_path::extname(".index.md"), ".md");
+/// assert_eq!(&nodejs_path::posix::extname(".index.md"), ".md");
 /// ```
 pub fn extname(path: &str) -> String {
     parse(path).ext
 }
 
-/// Returns a path string from an object. This is the opposite of nodejs_path::parse().
+/// Returns a path string from an object. This is the opposite of nodejs_path::posix::parse().
 
 pub fn format(path_object: Parsed) -> String {
     format_inner("/", path_object)
@@ -347,7 +347,7 @@ pub fn normalize(path: &str) -> String {
 
 /// # Example
 /// ```rust
-/// assert_eq!(nodejs_path::parse("/home/user/dir/file.txt"), nodejs_path::Parsed{
+/// assert_eq!(nodejs_path::posix::parse("/home/user/dir/file.txt"), nodejs_path::Parsed{
 ///   root: "/".to_string(),
 ///   dir: "/home/user/dir".to_string(),
 ///   base: "file.txt".to_string(),
@@ -606,15 +606,15 @@ pub fn resolve_impl<T: AsRef<str>>(args: &[T]) -> String {
 /// Resolves a sequence of paths or path segments into an absolute path.
 ///
 /// ```rust
-/// assert_eq!(&nodejs_path::resolve!("/foo/bar", "./baz"), "/foo/bar/baz");
+/// assert_eq!(&nodejs_path::posix::resolve!("/foo/bar", "./baz"), "/foo/bar/baz");
 ///
-/// assert_eq!(&nodejs_path::resolve!("/foo/bar", "/tmp/file/"), "/tmp/file");
+/// assert_eq!(&nodejs_path::posix::resolve!("/foo/bar", "/tmp/file/"), "/tmp/file");
 ///
-/// assert_eq!(&nodejs_path::resolve!("/home/myself/node", "wwwroot", "static_files/png/", "../gif/image.gif"), "/home/myself/node/wwwroot/static_files/gif/image.gif");
+/// assert_eq!(&nodejs_path::posix::resolve!("/home/myself/node", "wwwroot", "static_files/png/", "../gif/image.gif"), "/home/myself/node/wwwroot/static_files/gif/image.gif");
 ///
-/// assert_eq!(nodejs_path::resolve!("."), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
+/// assert_eq!(nodejs_path::posix::resolve!("."), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
 ///
-/// assert_eq!(nodejs_path::resolve!(), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
+/// assert_eq!(nodejs_path::posix::resolve!(), std::env::current_dir().unwrap().to_str().unwrap().to_owned());
 /// ```
 #[macro_export]
 macro_rules! resolve {

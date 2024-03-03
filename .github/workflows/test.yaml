@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+      - fix_windows_test
       
 name: Test
 

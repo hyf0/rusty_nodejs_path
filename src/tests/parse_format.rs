@@ -33,7 +33,6 @@ fn check_format_for_posix(test_cases: &[(Parsed, String)]) {
 }
 // { root: '/', dir: '/', base: '', ext: '', name: '' }
 
-#[cfg(target_family = "unix")]
 #[test]
 fn posix_tests() {
     let _win_paths = vec![
@@ -330,4 +329,10 @@ fn posix_tests() {
     //     });
     //   });
     // }
+}
+
+#[cfg(target_family = "windows")]
+#[test]
+fn posix_windows() {
+  
 }

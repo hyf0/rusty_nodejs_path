@@ -20,7 +20,6 @@ fn posixy_cwd() -> String {
     return cwd;
 }
 
-#[cfg(target_family = "unix")]
 #[test]
 fn posix_test() {
     // nodejs_path::resolve_with_array(&[]);
